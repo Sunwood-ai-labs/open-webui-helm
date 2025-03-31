@@ -1,1 +1,37 @@
+### Helm ###
+# Chart dependencies
+**/charts/*.tgz
+
+### General ###
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE/Editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*.swn
+*~
+
+# Logs
+*.log
+
+# Local development
+.env
+.env.local
+.env.*.local
+
+# Build and temp directories
+/dist/
+/tmp/
+/temp/
+
+# Original exclusion
 .qodo
