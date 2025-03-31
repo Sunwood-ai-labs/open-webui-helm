@@ -1,0 +1,13 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: open-webui-helm-cluster
+  region: ap-northeast-1
+
+nodeGroups:
+  - name: ng-1
+    instanceType: t3.large
+    desiredCapacity: 2
+    minSize: 1
+    maxSize: 3
