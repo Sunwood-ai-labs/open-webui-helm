@@ -1,0 +1,37 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: open-webui-helm-cluster
+  region: ap-northeast-1
+  version: "1.28"
+
+availabilityZones: ["ap-northeast-1a", "ap-northeast-1c"]
+
+# マネージドノードグループの設定
+managedNodeGroups:
+  # Open WebUI用ノードグループ
+  - name: openwebui-ng
+    instanceType: t3.medium
+    minSize: 1
+    maxSize: 2
+    desiredCapacity: 1
+    privateNetworking: true
+    labels:
+      role: openwebui
+    tags:
+      k8s.io/cluster-autoscaler/enabled: "true"
+      k8s.io/cluster-autoscaler/open-webui-helm-cluster: "owned"
+
+  # Ollama用ノードグループ
+  - name: ollama-ng
+    instanceType: t3.medium
+    minSize: 1
+    maxSize: 2
+    desiredCapacity: 1
+    privateNetworking: true
+    labels:
+      role: ollama
+    tags:
+      k8s.io/cluster-autoscaler/enabled: "true"
+      k8s.io/cluster-autoscaler/open-webui-helm-cluster: "owned"
