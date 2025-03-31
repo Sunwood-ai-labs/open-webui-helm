@@ -1,5 +1,7 @@
 # Open WebUI Helm Chart 🚀
 
+![Image](https://github.com/user-attachments/assets/6b896cc6-34d4-402c-b407-7ba20b0c1afb)
+
 このリポジトリは、Kubernetes上にOpen WebUIをデプロイするためのHelmチャートとデプロイスクリプト一式です。
 
 ## 💻 クイックスタート
@@ -20,6 +22,36 @@ scripts/uninstall.bat
 バッチファイルを実行すると、対話形式で必要な情報を入力しながら自動でデプロイを行います。
 
 ## ☁️ AWS EKSへのデプロイ
+
+### EKSクラスターの作成
+
+1. まず、cluster-config.yamlを作成します：
+
+```yaml
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: open-webui-helm-cluster
+  region: ap-northeast-1
+
+nodeGroups:
+  - name: ng-1
+    instanceType: t3.large
+    desiredCapacity: 2
+    minSize: 1
+    maxSize: 3
+```
+
+2. eksctlでクラスターを作成します：
+
+```bash
+eksctl create cluster -f cluster-config.yaml
+```
+
+クラスターの作成には15-20分程度かかります。完了するまでお待ちください。
+
+### Open WebUIのデプロイ
 
 ```bash
 # EKSへのインストール
