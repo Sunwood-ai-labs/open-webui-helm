@@ -1,0 +1,64 @@
+# Open WebUI のカスタム設定
+nameOverride: "open-webui"
+namespaceOverride: "open-webui"
+
+# デプロイメント設定
+replicaCount: 1
+
+# イメージ設定
+image:
+  repository: ghcr.io/open-webui/open-webui
+  tag: "latest"
+  pullPolicy: "IfNotPresent"
+
+# サービスアカウント設定
+serviceAccount:
+  enable: true
+  name: "open-webui"
+  annotations: {}
+  automountServiceAccountToken: false
+
+# サービス設定
+service:
+  type: ClusterIP
+  port: 3000
+
+# Ingress設定（有効化する場合は編集してください）
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: open-webui.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+# リソース設定（必要に応じて調整）
+resources:
+  limits:
+    cpu: 1000m
+    memory: 2Gi
+  requests:
+    cpu: 500m
+    memory: 1Gi
+
+# Open WebUI環境変数設定
+extraEnvVars:
+  - name: OPENAI_API_KEY
+    value: "dummy-key"
+  - name: OLLAMA_BASE_URL
+    value: "http://open-webui-ollama:11434"
+
+# Ollama設定
+ollama:
+  enabled: true
+  fullnameOverride: "open-webui-ollama"
+  service:
+    type: ClusterIP
+    port: 11434
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClass: ""
