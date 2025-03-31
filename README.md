@@ -1,144 +1,179 @@
-# Open WebUI Helm Chart デプロイガイド
+# Open WebUI Helm Chart 🚀
 
-このリポジトリは、Kubernetes上にOpen WebUIをHelmチャートを使ってデプロイするためのファイル一式を含んでいます。
+![Image](https://github.com/user-attachments/assets/6b896cc6-34d4-402c-b407-7ba20b0c1afb)
 
-## 前提条件
+このリポジトリは、Kubernetes上にOpen WebUIをデプロイするためのHelmチャートとデプロイスクリプト一式です。
 
-- Kubernetesクラスターが設定済みであること
-- Helmがインストール済みであること
-- GPUリソースがある場合は、NVIDIA GPUドライバーとDevice Pluginが設定済みであること
+## 構成図
 
-## インストール手順
+![](docs/architect.svg)
 
-### 1. Helmリポジトリの追加
+
+## 💻 クイックスタート
+
+### ローカルKubernetesへのインストール
+
+```bash
+# インストール
+scripts/install.bat
+
+# ポートフォワード設定
+scripts/port-forward.bat
+
+# アンインストール
+scripts/uninstall.bat
+```
+
+バッチファイルを実行すると、対話形式で必要な情報を入力しながら自動でデプロイを行います。
+
+## ☁️ AWS EKSへのデプロイ
+
+### 🚀 クイックスタート（自動セットアップ）
+
+```bash
+# 1. EKSクラスターの作成（約15-20分かかります）
+eksctl create cluster -f ./config/eks/cluster-config.yaml
+
+# 2. Open WebUIのインストール（CPU版）
+./scripts/install-eks.sh
+
+# アクセス方法
+# LoadBalancerのエンドポイント確認
+kubectl get -n open-webui svc open-webui --watch
+
+# または以下のコマンドで直接URLを取得
+export EXTERNAL_IP=$(kubectl get -n open-webui svc open-webui -o jsonpath="{.status.loadBalancer.ingress[0].hostname}")
+echo http://$EXTERNAL_IP:3000
+
+# ローカルから接続する場合（オプション）：
+./scripts/port-forward-eks.sh
+
+# アンインストール時
+./scripts/uninstall-eks.sh
+```
+
+### 📝 マニュアルセットアップ手順
+
+1. EKSクラスターの作成
+
+```bash
+# クラスター作成
+eksctl create cluster -f ./config/eks/cluster-config.yaml
+
+# kubeconfigの更新
+aws eks update-kubeconfig \
+  --region ap-northeast-1 \
+  --name open-webui-helm-cluster
+```
+
+2. Helmリポジトリの追加
 
 ```bash
 helm repo add open-webui https://helm.openwebui.com/
 helm repo update
 ```
 
-### 2. カスタム値ファイルの設定
-
-`values.yaml`ファイルでは、Open WebUIの設定をカスタマイズできます。
-
-### 3. Helmチャートのインストール
+3. Open WebUIのデプロイ
 
 ```bash
-# CPU専用の場合
-helm install open-webui open-webui/open-webui -f values.yaml -n open-webui --create-namespace
+# CPU版のインストール
+helm install open-webui open-webui/open-webui \
+  -f config/helm/values-eks.yaml \
+  -n open-webui \
+  --create-namespace
 
-# GPUを有効にする場合
-helm install open-webui open-webui/open-webui -f values-gpu.yaml -n open-webui --create-namespace
+# GPU版のインストール（オプション）
+helm install open-webui open-webui/open-webui \
+  -f config/helm/values-eks-gpu.yaml \
+  -n open-webui \
+  --create-namespace
 ```
 
-### 4. アクセス方法
-
-インストール後、サービスにアクセスするには以下の方法があります：
-
-- Port Forwardを使用する場合：
-  ```bash
-  kubectl port-forward -n open-webui svc/open-webui 3000:3000
-  ```
-  その後、ブラウザで `http://localhost:3000` にアクセス
-
-- Ingressを設定している場合は、設定したホスト名でアクセス
-
-## AWS EKSへのデプロイ方法
-
-Open WebUIはAmazon EKS (Elastic Kubernetes Service)にも簡単にデプロイできます。
-
-### 1. EKSクラスターの準備
-
-#### EKSクラスターの作成
-```bash
-# eksctlを使用する場合の例
-eksctl create cluster \
-  --name open-webui-cluster \
-  --version 1.29 \
-  --region us-west-2 \
-  --nodegroup-name standard-nodes \
-  --node-type t3.large \
-  --nodes 2 \
-  --nodes-min 1 \
-  --nodes-max 3 \
-  --managed
-```
-
-#### GPUノードを追加（オプション）
-```bash
-# GPUノードグループを追加
-eksctl create nodegroup \
-  --cluster open-webui-cluster \
-  --region us-west-2 \
-  --name gpu-nodes \
-  --node-type g4dn.xlarge \
-  --nodes 1 \
-  --nodes-min 1 \
-  --nodes-max 2 \
-  --managed
-```
-
-#### NVIDIA Device Pluginのインストール（GPUノードの場合）
-```bash
-kubectl create -f https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v0.14.0/nvidia-device-plugin.yml
-```
-
-### 2. EKS用のvalues.yamlの修正
-
-EKS用の設定を`values.yaml`および`values-gpu.yaml`に追加します：
-
-#### ストレージクラスの設定
-```yaml
-# EKSのストレージクラス設定
-ollama:
-  persistence:
-    storageClass: "gp3"  # AWSのEBSストレージクラス
-```
-
-#### ロードバランサーの設定（外部公開する場合）
-```yaml
-# サービスタイプをLoadBalancerに変更
-service:
-  type: LoadBalancer
-  annotations:
-    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"  # Network Load Balancer
-    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
-```
-
-### 3. EKSクラスターへのデプロイ
-
-AWS CLIで認証情報を設定後、kubeconfigを更新します：
-```bash
-aws eks update-kubeconfig --region us-west-2 --name open-webui-cluster
-```
-
-Helmでデプロイ：
-```bash
-# CPU専用の場合
-helm install open-webui open-webui/open-webui -f values-eks.yaml -n open-webui --create-namespace
-
-# GPUを有効にする場合
-helm install open-webui open-webui/open-webui -f values-eks-gpu.yaml -n open-webui --create-namespace
-```
-
-### 4. アクセス情報の取得
+4. デプロイ状態の確認
 
 ```bash
-# ロードバランサーのエンドポイントを取得
-kubectl get svc -n open-webui open-webui -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
+# Podの状態確認
+kubectl get pods -n open-webui
+
+# サービスのエンドポイント確認
+kubectl get svc -n open-webui
 ```
 
-このエンドポイントをブラウザで開き、Open WebUIにアクセスできます。
-
-## アンインストール
+5. アンインストール手順
 
 ```bash
+# Helm リリースの削除
 helm uninstall open-webui -n open-webui
+
+# 名前空間の削除
+kubectl delete namespace open-webui
+
+# クラスターの削除
+eksctl delete cluster -f ./config/eks/cluster-config.yaml \
+  --force --disable-nodegroup-eviction
 ```
 
-## 構成ファイルについて
+詳細は [EKSデプロイガイド](docs-eks.md) を参照してください。
 
-- `values.yaml`: 基本的な設定を含むカスタム値ファイル
-- `values-gpu.yaml`: GPU対応の設定を含むカスタム値ファイル
-- `values-eks.yaml`: AWS EKS向けの設定を含むカスタム値ファイル（必要に応じて作成）
-- `values-eks-gpu.yaml`: AWS EKS + GPU向けの設定を含むカスタム値ファイル（必要に応じて作成）
+## 📁 ディレクトリ構成
+
+```
+.
+├── config/                # 設定ファイル
+│   ├── eks/              # EKS関連設定
+│   │   └── cluster-config.yaml  # EKSクラスター設定
+│   └── helm/             # Helm値設定
+│       ├── values.yaml         # 基本設定
+│       ├── values-gpu.yaml     # GPU有効設定
+│       ├── values-eks.yaml     # EKS用基本設定
+│       └── values-eks-gpu.yaml # EKS用GPU有効設定
+│
+├── docs/                 # ドキュメント
+│   ├── architect.dio     # アーキテクチャ図(draw.io)
+│   ├── architect.svg     # アーキテクチャ図(SVG)
+│   └── docs-eks.md      # EKSデプロイガイド
+│
+└── scripts/             # デプロイスクリプト
+    ├── install.sh         # ローカルKubernetes用インストール
+    ├── install-eks.sh     # EKS用インストール
+    ├── port-forward.sh    # ローカルポートフォワード
+    ├── port-forward-eks.sh # EKS用ポートフォワード
+    ├── uninstall.sh       # ローカルKubernetes用アンインストール
+    └── uninstall-eks.sh   # EKS用アンインストール
+```
+
+各種設定ファイルの詳細については [EKSデプロイガイド](docs-eks.md) を参照してください。
+
+## 🔧 環境変数の設定
+
+### 必須の環境変数
+
+```bash
+# AWS認証情報の設定
+export AWS_ACCESS_KEY_ID="your-access-key"
+export AWS_SECRET_ACCESS_KEY="your-secret-key"
+export AWS_DEFAULT_REGION="ap-northeast-1"
+
+# kubectlのコンテキスト設定
+export KUBECONFIG=~/.kube/config
+```
+
+### オプションの環境変数
+
+```bash
+# Open WebUIの設定
+export OPENAI_API_KEY="your-api-key"  # OpenAI APIキー（オプション）
+export OLLAMA_BASE_URL="http://open-webui-ollama:11434"  # Ollamaサーバーのアドレス
+
+# GPUサポート設定（GPU版を使用する場合）
+export NVIDIA_VISIBLE_DEVICES="all"    # 利用可能なGPUデバイス
+```
+
+## 🌟 機能と特徴
+
+- ✨ EKSクラスターの自動セットアップ
+- 🚀 簡単なデプロイプロセス
+- 🎮 CPUモードとGPUモードの選択可能
+- 🔄 オートスケーリングのサポート
+- 💾 永続的なデータストレージ（EBS）
+- 🔒 セキュアなネットワーク設定

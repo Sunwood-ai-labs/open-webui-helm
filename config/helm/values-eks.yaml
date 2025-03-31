@@ -1,0 +1,122 @@
+# Open WebUI の AWS EKS向けカスタム設定
+nameOverride: "open-webui"
+namespaceOverride: "open-webui"
+
+# デプロイメント設定
+replicaCount: 1
+
+# イメージ設定
+image:
+  repository: ghcr.io/open-webui/open-webui
+  tag: "latest"
+  pullPolicy: "Always"  # 変更: 最新イメージを常に取得
+
+# サービスアカウント設定
+serviceAccount:
+  create: true  # 変更: 作成を有効化
+  name: "open-webui"
+  annotations: {}
+
+# サービス設定 - AWS LoadBalancerを使用
+service:
+  type: LoadBalancer
+  port: 3000
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+
+# リソース設定
+resources:
+  limits:
+    cpu: 1000m
+    memory: 2Gi
+  requests:
+    cpu: 500m
+    memory: 1Gi
+
+# Open WebUI環境変数設定
+extraEnvVars:
+  - name: OPENAI_API_KEY
+    value: "dummy-key"
+  - name: OLLAMA_BASE_URL
+    value: "http://open-webui-ollama:11434"
+
+# Ollama設定
+ollama:
+  enabled: true
+  fullnameOverride: "open-webui-ollama"
+  
+  # サービス設定
+  service:
+    type: ClusterIP
+    port: 11434
+  
+  # 永続化設定
+  persistence:
+    enabled: true
+    size: 20Gi
+    storageClass: "gp2"  # 変更: gp2を使用（より広くサポートされている）
+    accessModes:
+      - ReadWriteOnce
+  
+  # リソース設定
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 4Gi
+    requests:
+      cpu: 1000m
+      memory: 2Gi
+  
+  # Ollamaのノード選択設定
+  nodeSelector:
+    role: ollama
+  
+  tolerations:
+    - key: "role"
+      operator: "Equal"
+      value: "ollama"
+      effect: "NoSchedule"
+
+# WebUIのノード選択設定
+nodeSelector:
+  role: openwebui
+
+# アフィニティ設定
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: role
+          operator: In
+          values:
+          - openwebui
+
+# トレランス設定
+tolerations:
+  - key: "role"
+    operator: "Equal"
+    value: "openwebui"
+    effect: "NoSchedule"
+
+# アップデート戦略
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 1
+
+# プローブ設定
+livenessProbe:
+  httpGet:
+    path: /
+    port: 3000
+  initialDelaySeconds: 30
+  periodSeconds: 10
+
+readinessProbe:
+  httpGet:
+    path: /
+    port: 3000
+  initialDelaySeconds: 30
+  periodSeconds: 10
