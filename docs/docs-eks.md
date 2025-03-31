@@ -119,27 +119,103 @@ eksctl get cluster --name=open-webui-helm-cluster --region=ap-northeast-1
 aws eks describe-cluster --name open-webui-helm-cluster --region ap-northeast-1
 ```
 
-### 5. デプロイ後の設定
+### 5. デプロイ後の設定と確認
 
 #### ロードバランサーのエンドポイント取得
 ```bash
-kubectl get svc -n open-webui open-webui -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
+# エンドポイントの確認
+kubectl get svc -n open-webui open-webui --watch
+
+# または以下のコマンドでURLを直接取得
+export EXTERNAL_IP=$(kubectl get -n open-webui svc open-webui -o jsonpath="{.status.loadBalancer.ingress[0].hostname}")
+echo http://$EXTERNAL_IP:3000
+```
+
+#### 初期設定
+1. ブラウザでLoadBalancerのエンドポイントにアクセス
+2. 管理者アカウントを作成
+3. Ollamaモデルのダウンロードと設定
+
+#### ヘルスチェック
+```bash
+# Podの状態確認
+kubectl get pods -n open-webui
+
+# イベントログの確認
+kubectl get events -n open-webui
+
+# Podの詳細情報
+kubectl describe pod -n open-webui -l app.kubernetes.io/name=open-webui
 ```
 
 ## 🔧 トラブルシューティング
 
-### ポッドのステータス確認
-```bash
-kubectl get pods -n open-webui
-```
+### よくある問題と解決方法
 
-### ログの確認
+#### 1. Podが起動しない場合
 ```bash
+# ログの確認
 kubectl logs -n open-webui deployment/open-webui
 kubectl logs -n open-webui deployment/open-webui-ollama
+
+# Pod詳細の確認
+kubectl describe pod -n open-webui -l app.kubernetes.io/name=open-webui
 ```
 
-### 再起動
+#### 2. LoadBalancerにアクセスできない場合
 ```bash
+# LoadBalancerの状態確認
+kubectl get svc -n open-webui
+kubectl describe svc -n open-webui open-webui
+
+# セキュリティグループの確認
+aws ec2 describe-security-groups --filters Name=group-name,Values=*open-webui*
+```
+
+#### 3. モデルのダウンロードが失敗する場合
+```bash
+# Ollamaのログ確認
+kubectl logs -f -n open-webui deployment/open-webui-ollama
+
+# ストレージの使用状況確認
+kubectl get pvc -n open-webui
+```
+
+### システムの再起動と更新
+
+#### Podの再起動
+```bash
+# 特定のPodの再起動
 kubectl rollout restart deployment/open-webui -n open-webui
 kubectl rollout restart deployment/open-webui-ollama -n open-webui
+
+# デプロイメントの状態確認
+kubectl rollout status deployment/open-webui -n open-webui
+```
+
+#### Helmリリースの更新
+```bash
+# 設定の更新
+helm upgrade open-webui open-webui/open-webui \
+  -f config/helm/values-eks.yaml \
+  -n open-webui
+
+# リリース履歴の確認
+helm history open-webui -n open-webui
+
+# 前のリリースにロールバック（必要な場合）
+helm rollback open-webui 1 -n open-webui
+```
+
+### リソースのクリーンアップ
+```bash
+# 特定のリソースの削除
+kubectl delete pod <pod-name> -n open-webui
+kubectl delete pvc <pvc-name> -n open-webui
+
+# 名前空間ごと削除
+kubectl delete namespace open-webui
+
+# Helmリリースの削除
+helm uninstall open-webui -n open-webui
+```

@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="open-webui-eks-architecture" name="Page-1">
-        <mxGraphModel dx="567" dy="558" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
+        <mxGraphModel dx="365" dy="427" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -131,29 +131,8 @@
                 <mxCell id="conn_openwebui_to_ollama" style="edgeStyle=none;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;" parent="vpc" source="openwebui_pod" target="ollama_pod" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="metrics_pod" value="Metrics Server" style="sketch=0;html=1;dashed=0;whitespace=wrap;fillColor=#2875E2;strokeColor=#ffffff;points=[[0.005,0.63,0],[0.1,0.2,0],[0.9,0.2,0],[0.5,0,0],[0.995,0.63,0],[0.72,0.99,0],[0.5,1,0],[0.28,0.99,0]];verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;fontStyle=0;aspect=fixed;shape=mxgraph.kubernetes.icon;prIcon=ds" parent="region" vertex="1">
-                    <mxGeometry x="435" y="560" width="50" height="48" as="geometry"/>
-                </mxCell>
                 <mxCell id="metrics_created_with" value="helm" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;align=center;fontSize=10;" parent="region" vertex="1">
                     <mxGeometry x="505" y="570" width="50" height="20" as="geometry"/>
-                </mxCell>
-                <mxCell id="conn_metrics_to_worker_ec2" value="" style="endArrow=classic;html=1;rounded=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;dashed=1;" parent="region" source="metrics_pod" target="ec2_worker_instance" edge="1">
-                    <mxGeometry width="50" height="50" relative="1" as="geometry">
-                        <mxPoint x="330" y="310" as="sourcePoint"/>
-                        <mxPoint x="380" y="260" as="targetPoint"/>
-                        <Array as="points">
-                            <mxPoint x="210" y="584"/>
-                        </Array>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="conn_metrics_to_cpu_ec2" value="" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;dashed=1;" parent="region" source="metrics_pod" target="ec2_cpu_instance" edge="1">
-                    <mxGeometry width="50" height="50" relative="1" as="geometry">
-                        <mxPoint x="330" y="310" as="sourcePoint"/>
-                        <mxPoint x="380" y="260" as="targetPoint"/>
-                        <Array as="points">
-                            <mxPoint x="590" y="584"/>
-                        </Array>
-                    </mxGeometry>
                 </mxCell>
                 <mxCell id="legend_title" value="Legend:" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="aws_cloud" vertex="1">
                     <mxGeometry x="30" y="650" width="60" height="20" as="geometry"/>
@@ -229,6 +208,27 @@
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="80" y="858" as="sourcePoint"/>
                         <mxPoint x="140" y="845" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="metrics_pod" value="Metrics Server" style="sketch=0;html=1;dashed=0;whitespace=wrap;fillColor=#2875E2;strokeColor=#ffffff;points=[[0.005,0.63,0],[0.1,0.2,0],[0.9,0.2,0],[0.5,0,0],[0.995,0.63,0],[0.72,0.99,0],[0.5,1,0],[0.28,0.99,0]];verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;fontStyle=0;aspect=fixed;shape=mxgraph.kubernetes.icon;prIcon=ds" parent="1" vertex="1">
+                    <mxGeometry x="510" y="812" width="50" height="48" as="geometry"/>
+                </mxCell>
+                <mxCell id="conn_metrics_to_worker_ec2" value="" style="endArrow=classic;html=1;rounded=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;dashed=1;" parent="1" source="metrics_pod" target="ec2_worker_instance" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="400" y="450" as="sourcePoint"/>
+                        <mxPoint x="450" y="400" as="targetPoint"/>
+                        <Array as="points">
+                            <mxPoint x="280" y="724"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="conn_metrics_to_cpu_ec2" value="" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;dashed=1;" parent="1" source="metrics_pod" target="ec2_cpu_instance" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="400" y="450" as="sourcePoint"/>
+                        <mxPoint x="450" y="400" as="targetPoint"/>
+                        <Array as="points">
+                            <mxPoint x="660" y="724"/>
+                        </Array>
                     </mxGeometry>
                 </mxCell>
             </root>
