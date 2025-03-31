@@ -4,6 +4,11 @@
 
 このリポジトリは、Kubernetes上にOpen WebUIをデプロイするためのHelmチャートとデプロイスクリプト一式です。
 
+## 構成図
+
+![](docs/architect.svg)
+
+
 ## 💻 クイックスタート
 
 ### ローカルKubernetesへのインストール
