@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ollama-amaterasu1:/root/.ollama
+    env_file:
+      - .env
+    pull_policy: always
+    tty: true
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    volumes:
+      - open-webui-amaterasu1:/app/backend/data
+      - ./:/work
+      - ./backup:/backup
+    depends_on:
+      - ollama
+    ports:
+      - ${OPEN_WEBUI_PORT-8181}:8080
+    env_file:
+      - .env
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+
+volumes:
+  ollama-amaterasu1: {}
+  open-webui-amaterasu1: {}

@@ -37,3 +37,4 @@ Thumbs.db
 .qodo
 aws/
 *.zip
+*.tar.gz
